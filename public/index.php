@@ -5,6 +5,8 @@ define('SOURCE_DIR', BASE_DIR.'/src');
 define("CONTROLLER_DIR", SOURCE_DIR.'/controllers');
 define("MODEL_DIR", SOURCE_DIR.'/models');
 define("VIEW_DIR", SOURCE_DIR.'/views');
+define("DATA_DIR", BASE_DIR.'/data');
+
 
 session_start();
 
@@ -18,8 +20,8 @@ header("content-type: application/json; charset=utf-8");
 
 $dir = scandir(CONTROLLER_DIR);
 
-foreach($dir as $file) {
-    if(in_array($file, [".", ".."])) {
+foreach ($dir as $file) {
+    if (in_array($file, [".", ".."])) {
         continue;
     }
 
@@ -29,31 +31,31 @@ foreach($dir as $file) {
         continue;
     }
 
-    foreach($entry as $class => $method) {
+    foreach ($entry as $class => $method) {
         if (!isset($method[$_SERVER['REQUEST_METHOD']])) {
             continue;
         }
-        foreach($method[$_SERVER['REQUEST_METHOD']] as $api => $func) {
+        foreach ($method[$_SERVER['REQUEST_METHOD']] as $api => $func) {
             $same_route = true;
             $replace_var = [];
             $api_splited = explode("/", $api);
             $route_splited = explode("/", $route);
             if (sizeof($api_splited) != sizeof($route_splited)) {
                 $same_route = false;
-            }else {
-                foreach($api_splited as $i => $part) {
-                    if(!isset($route_splited[$i])) {
+            } else {
+                foreach ($api_splited as $i => $part) {
+                    if (!isset($route_splited[$i])) {
                         $same_route = false;
                         break;
                     }
-                    if($part != $route_splited[$i]) {
+                    if ($part != $route_splited[$i]) {
                         if ($part[0] == ":") {
                             if (preg_match("/^[a-zA-Z1-9_ -]{1,}$/", $route_splited[$i]) == 0) {
                                 $same_route = false;
                                 break;
                             }
                             $replace_var[$part] = $route_splited[$i];
-                        }else {
+                        } else {
                             $same_route = false;
                             break;
                         }
@@ -61,15 +63,15 @@ foreach($dir as $file) {
                 }
             }
 
-            if($same_route) {
+            if ($same_route) {
                 eval("\$inst = new " . $class . ";");
 
-                if(sizeof($replace_var) > 0) {
-                    foreach($replace_var as $key => $value) {
+                if (sizeof($replace_var) > 0) {
+                    foreach ($replace_var as $key => $value) {
                         $func = str_replace($key, "\"$value\"", $func);
                     }
                 }
-                
+
                 eval("\$inst->" . $func . ";");
                 exit;
             }
